@@ -1,0 +1,17 @@
+# Requirements for Jetson Nano (ARM64)
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+Pillow==9.5.0
+# Use system OpenCV on Jetson Nano or install via apt
+# opencv-python is often problematic on ARM, better to use system package
+numpy==1.21.6
+# PyTorch for Jetson Nano (install via NVIDIA's wheel)
+# torch==1.13.0
+# torchvision==0.14.0
+# Use CPU-only ONNX Runtime for ARM64
+onnxruntime==1.16.3
+python-dotenv==1.0.0
+aiofiles==23.2.0
+# InsightFace alternative for ARM64
+# insightface==0.7.3

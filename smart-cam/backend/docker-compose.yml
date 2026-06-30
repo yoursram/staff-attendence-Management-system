@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  smart-cam-api:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/app/src
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+      - ./app.py:/app/app.py
+      - ./config.py:/app/config.py
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - DEBUG=true
+    command: uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+    stdin_open: true
+    tty: true

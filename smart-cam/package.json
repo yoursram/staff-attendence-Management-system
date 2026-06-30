@@ -1,0 +1,20 @@
+{
+  "name": "smart-cam",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vignana-Jyothi/smart-cam.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Vignana-Jyothi/smart-cam/issues"
+  },
+  "homepage": "https://github.com/Vignana-Jyothi/smart-cam#readme"
+}
