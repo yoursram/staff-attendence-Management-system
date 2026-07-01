@@ -37,8 +37,8 @@ async def scan_attendance(
             return {"success": False, "message": "Unknown Person"}
             
         # Mark attendance
-        today = datetime.utcnow().date()
-        current_time = datetime.utcnow().time()
+        today = datetime.now().date()
+        current_time = datetime.now().time()
         
         # Prevent duplicate
         existing = db.query(Attendance).filter(
@@ -88,7 +88,7 @@ async def scan_attendance(
 @router.get("/daily")
 def get_daily_attendance(date: str = None, db: Session = Depends(get_db)):
     if not date:
-        query_date = datetime.utcnow().date()
+        query_date = datetime.now().date()
     else:
         query_date = datetime.strptime(date, "%Y-%m-%d").date()
         
@@ -144,7 +144,7 @@ def get_attendance_history(db: Session = Depends(get_db)):
 @router.get("/weekly")
 def get_weekly_stats(db: Session = Depends(get_db)):
     from datetime import timedelta
-    today = datetime.utcnow().date()
+    today = datetime.now().date()
     
     total_staff = db.query(CleaningStaff).count()
     weekly_data = []

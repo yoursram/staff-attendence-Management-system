@@ -7,7 +7,7 @@ class Admin(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(255), unique=True, index=True)
     password_hash = Column(String(255))
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now)
 
 class CleaningStaff(Base):
     __tablename__ = "cleaning_staff"
@@ -20,7 +20,7 @@ class CleaningStaff(Base):
     joining_date = Column(Date)
     image_path = Column(String(255))
     embedding = Column(LargeBinary) # BLOB for numpy array
-    registered_at = Column(DateTime, default=datetime.utcnow)
+    registered_at = Column(DateTime, default=datetime.now)
 
 class Attendance(Base):
     __tablename__ = "attendance"
@@ -31,4 +31,4 @@ class Attendance(Base):
     status = Column(String(50))
     confidence_score = Column(Float)
     camera_location = Column(String(255), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now)
