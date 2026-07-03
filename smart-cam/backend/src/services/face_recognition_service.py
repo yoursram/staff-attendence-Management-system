@@ -21,9 +21,22 @@ class FaceRecognitionService:
     def initialize_model(self):
         """Initialize the InsightFace model."""
         try:
-            self.app = FaceAnalysis(name='buffalo_s', providers=['CPUExecutionProvider'])
-            self.app.prepare(ctx_id=0)
-            print("InsightFace model 'buffalo_s' initialized successfully with CPU")
+            import onnxruntime as ort
+            available_providers = ort.get_available_providers()
+            print(f"Available ONNX Runtime providers: {available_providers}")
+            
+            if 'CUDAExecutionProvider' in available_providers:
+                providers = ['CUDAExecutionProvider', 'CPUExecutionProvider']
+                ctx_id = 0
+                device_msg = "GPU (CUDA)"
+            else:
+                providers = ['CPUExecutionProvider']
+                ctx_id = -1
+                device_msg = "CPU"
+                
+            self.app = FaceAnalysis(name='buffalo_s', providers=providers)
+            self.app.prepare(ctx_id=ctx_id)
+            print(f"InsightFace model 'buffalo_s' initialized successfully with {device_msg}")
         except Exception as e:
             print(f"Error initializing InsightFace model: {e}")
             raise

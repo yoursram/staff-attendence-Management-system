@@ -45,7 +45,7 @@ export default function DashboardLayout({
       <div className="w-64 bg-white border-r border-gray-200 flex flex-col fixed h-full z-10">
         <div className="h-16 flex items-center px-6 border-b border-gray-100">
           <Camera className="w-6 h-6 text-primary mr-2" />
-          <span className="text-xl font-bold text-gray-900">SmartCam</span>
+          <span className="text-xl font-bold text-gray-900">StaffCam</span>
         </div>
         
         <nav className="flex-1 px-4 py-6 flex flex-col gap-2">

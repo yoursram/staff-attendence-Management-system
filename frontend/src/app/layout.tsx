@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Cleaning Staff Attendance",
-  description: "SmartCam-Based Cleaning Staff Attendance Management System",
+  description: "StaffCam-Based Cleaning Staff Attendance Management System",
 };
 
 export default function RootLayout({
