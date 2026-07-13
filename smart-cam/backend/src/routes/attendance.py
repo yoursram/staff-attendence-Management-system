@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from src.database import get_db
@@ -14,69 +14,111 @@ router = APIRouter()
 @router.post("/scan")
 async def scan_attendance(
     file: UploadFile = File(...),
-    camera_location: str = "Main Gate",
+    camera_location: str = Form("Main Gate"),
+    confirm: bool = Form(False),
+    confirmed_staff_ids: str | None = Form(None),
     db: Session = Depends(get_db)
 ):
     if not validate_image(file):
         raise HTTPException(status_code=400, detail="Invalid image file")
-    
+
     file_path = await save_upload_file(file)
     try:
-        # Detect and recognize
         result = face_service.detect_and_recognize_faces(file_path)
-        
+
         if result["faces_detected"] == 0:
             return {"success": False, "message": "No face detected"}
-            
-        # Get the first face
-        face = result["faces"][0]
-        recognition = face["recognition"]
-        staff_id = recognition.get("staff_id")
-        
-        if not staff_id or staff_id == "Unknown":
+
+        recognized_people = []
+        seen_staff_ids = set()
+
+        for face in result.get("faces", []):
+            recognition = face.get("recognition") or {}
+            staff_id = recognition.get("staff_id")
+            if not staff_id or staff_id == "Unknown" or staff_id in seen_staff_ids:
+                continue
+
+            seen_staff_ids.add(staff_id)
+            recognized_people.append({
+                "face_id": face.get("face_id"),
+                "staff_id": staff_id,
+                "name": recognition.get("name", "Unknown"),
+                "confidence": float(recognition.get("confidence", 0.0)),
+            })
+
+        if not recognized_people:
             return {"success": False, "message": "Unknown Person"}
-            
-        # Mark attendance
-        today = datetime.now().date()
-        current_time = datetime.now().time()
-        
-        # Prevent duplicate
-        existing = db.query(Attendance).filter(
-            Attendance.staff_id == staff_id,
-            Attendance.attendance_date == today
-        ).first()
-        
-        if existing:
+
+        if not confirm:
             return {
-                "success": False, 
-                "message": "Attendance already recorded for today.",
+                "success": True,
+                "message": "Recognition complete. Please verify the detected people before marking attendance.",
+                "requires_verification": True,
                 "data": {
-                    "staff_id": staff_id,
-                    "name": recognition["name"],
-                    "status": "Already Marked"
+                    "recognized_people": recognized_people,
+                    "camera_location": camera_location,
+                    "scanned_at": datetime.now().strftime("%I:%M %p")
                 }
             }
-            
-        new_attendance = Attendance(
-            staff_id=staff_id,
-            attendance_date=today,
-            attendance_time=current_time,
-            status="Present",
-            confidence_score=recognition["confidence"],
-            camera_location=camera_location
-        )
-        db.add(new_attendance)
-        db.commit()
-        
-        return {
-            "success": True,
-            "message": "Attendance Marked Successfully",
-            "data": {
-                "staff_id": staff_id,
-                "name": recognition["name"],
+
+        selected_ids = []
+        if confirmed_staff_ids:
+            selected_ids = [staff_id.strip() for staff_id in confirmed_staff_ids.split(",") if staff_id.strip()]
+
+        if not selected_ids:
+            selected_ids = [person["staff_id"] for person in recognized_people]
+
+        today = datetime.now().date()
+        current_time = datetime.now().time()
+        marked_people = []
+        already_marked_people = []
+        attendance_records = []
+
+        for person in recognized_people:
+            if person["staff_id"] not in selected_ids:
+                continue
+
+            existing = db.query(Attendance).filter(
+                Attendance.staff_id == person["staff_id"],
+                Attendance.attendance_date == today
+            ).first()
+
+            if existing:
+                already_marked_people.append({
+                    "staff_id": person["staff_id"],
+                    "name": person["name"],
+                    "status": "Already Marked"
+                })
+                continue
+
+            attendance_records.append(Attendance(
+                staff_id=person["staff_id"],
+                attendance_date=today,
+                attendance_time=current_time,
+                status="Present",
+                confidence_score=person["confidence"],
+                camera_location=camera_location
+            ))
+            marked_people.append({
+                "staff_id": person["staff_id"],
+                "name": person["name"],
                 "status": "Present",
                 "time": current_time.strftime("%I:%M %p"),
                 "date": today.strftime("%Y-%m-%d")
+            })
+
+        if attendance_records:
+            db.add_all(attendance_records)
+            db.commit()
+
+        return {
+            "success": True,
+            "message": "Attendance marked successfully for the verified people.",
+            "requires_verification": False,
+            "data": {
+                "marked_people": marked_people,
+                "already_marked_people": already_marked_people,
+                "total_marked": len(marked_people)
             }
         }
     except Exception as e:
