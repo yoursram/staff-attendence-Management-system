@@ -1,7 +1,22 @@
 import os
+import sys
 import pickle
 import numpy as np
 from typing import List, Dict, Optional
+
+# ── Register CUDA DLL dirs BEFORE onnxruntime/insightface are imported ────────
+_VENV_SITE_PKGS = os.path.join(os.path.dirname(sys.executable), "Lib", "site-packages")
+for _p in [
+    os.path.join(_VENV_SITE_PKGS, "nvidia", "cu13",         "bin", "x86_64"),
+    os.path.join(_VENV_SITE_PKGS, "nvidia", "cublas",       "bin"),
+    os.path.join(_VENV_SITE_PKGS, "nvidia", "cudnn",        "bin"),
+    os.path.join(_VENV_SITE_PKGS, "nvidia", "cuda_runtime", "bin"),
+    os.path.join(_VENV_SITE_PKGS, "nvidia", "cuda_nvrtc",   "bin"),
+]:
+    if os.path.isdir(_p):
+        os.add_dll_directory(_p)
+# ─────────────────────────────────────────────────────────────────────────────
+
 import insightface
 from insightface.app import FaceAnalysis
 import cv2

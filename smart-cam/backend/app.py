@@ -2,6 +2,26 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import os
+import sys
+
+# ── Register CUDA DLL directories bundled in the venv (Windows only) ──────────
+# onnxruntime-gpu needs cublasLt64_13.dll, cudnn64_9.dll etc. to be visible
+# before the provider is loaded. We search known nvidia wheel bin dirs and
+# add every existing path via os.add_dll_directory.
+_VENV_SITE_PKGS = os.path.join(os.path.dirname(sys.executable), "Lib", "site-packages")
+_NVIDIA_BIN_PATHS = [
+    os.path.join(_VENV_SITE_PKGS, "nvidia", "cu13",         "bin", "x86_64"),
+    os.path.join(_VENV_SITE_PKGS, "nvidia", "cublas",       "bin"),
+    os.path.join(_VENV_SITE_PKGS, "nvidia", "cudnn",        "bin"),
+    os.path.join(_VENV_SITE_PKGS, "nvidia", "cuda_runtime", "bin"),
+    os.path.join(_VENV_SITE_PKGS, "nvidia", "cuda_nvrtc",   "bin"),
+]
+for _p in _NVIDIA_BIN_PATHS:
+    if os.path.isdir(_p):
+        os.add_dll_directory(_p)
+        print(f"[GPU] Added DLL directory: {_p}")
+# ─────────────────────────────────────────────────────────────────────────────
+
 from config import config
 
 # New imports

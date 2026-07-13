@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Smart Cam Backend",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/smart-cam/backend/app.py",
+      "cwd": "${workspaceFolder}/smart-cam/backend",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/smart-cam/backend",
+        "PORT": "8001"
+      },
+      "python": "${workspaceFolder}/smart-cam/backend/venv/Scripts/python.exe"
+    }
+  ]
+}
