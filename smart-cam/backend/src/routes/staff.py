@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from src.database import get_db
 from src.models import CleaningStaff
@@ -7,8 +8,17 @@ from src.services.face_recognition_service import face_service
 from src.utils.image_utils import validate_image, save_upload_file
 import os
 from datetime import datetime
+from typing import Optional
 
 router = APIRouter()
+
+class StaffUpdatePayload(BaseModel):
+    name: Optional[str] = None
+    department: Optional[str] = None
+    shift: Optional[str] = None
+    mobile: Optional[str] = None
+    gender: Optional[str] = None
+    joining_date: Optional[str] = None
 
 
 @router.post("/register")
@@ -79,6 +89,44 @@ def get_all_staff(db: Session = Depends(get_db)):
             "registered_at": s.registered_at
         })
     return {"staff": result}
+
+@router.put("/{staff_id}")
+def update_staff(staff_id: str, payload: StaffUpdatePayload, db: Session = Depends(get_db)):
+    staff = db.query(CleaningStaff).filter(CleaningStaff.staff_id == staff_id).first()
+    if not staff:
+        raise HTTPException(status_code=404, detail="Staff not found")
+
+    if payload.name is not None:
+        staff.name = payload.name
+    if payload.department is not None:
+        staff.department = payload.department
+    if payload.shift is not None:
+        staff.shift = payload.shift
+    if payload.mobile is not None:
+        staff.mobile = payload.mobile
+    if payload.gender is not None:
+        staff.gender = payload.gender
+    if payload.joining_date is not None:
+        staff.joining_date = datetime.strptime(payload.joining_date, "%Y-%m-%d").date()
+
+    db.commit()
+    db.refresh(staff)
+    face_service.reload_database()
+
+    return {
+        "success": True,
+        "message": "Staff updated successfully",
+        "staff": {
+            "staff_id": staff.staff_id,
+            "name": staff.name,
+            "department": staff.department,
+            "shift": staff.shift,
+            "mobile": staff.mobile,
+            "gender": staff.gender,
+            "joining_date": staff.joining_date,
+            "registered_at": staff.registered_at
+        }
+    }
 
 @router.delete("/{staff_id}")
 def delete_staff(staff_id: str, db: Session = Depends(get_db)):
