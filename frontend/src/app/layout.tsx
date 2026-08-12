@@ -10,6 +10,14 @@ export const metadata: Metadata = {
   description: "StaffCam-Based Cleaning Staff Attendance Management System",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
+
 export default function RootLayout({
   children,
 }: Readonly<{

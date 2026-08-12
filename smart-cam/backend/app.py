@@ -40,7 +40,8 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="Smart Cam Face Recognition API",
     description="Backend service for face detection and attendance",
-    version="1.0.0"
+    version="1.0.0",
+    redirect_slashes=False  # Prevent 307 redirects that break HTTPS behind reverse proxy
 )
 
 # Add CORS middleware

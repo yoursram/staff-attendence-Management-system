@@ -47,7 +47,7 @@ export default function StaffDirectory() {
   const handleDelete = async (staff_id: string) => {
     if (confirm(`Are you sure you want to delete staff member ${staff_id}?`)) {
       try {
-        await api.delete(`/staff/${staff_id}`);
+        await api.delete(`/staff/${staff_id}/`);
         toast.success("Staff deleted successfully");
         fetchStaff();
       } catch {
@@ -77,7 +77,7 @@ export default function StaffDirectory() {
     if (!editingStaff) return;
 
     try {
-      await api.put(`/staff/${editingStaff.staff_id}`, editForm);
+      await api.put(`/staff/${editingStaff.staff_id}/`, editForm);
       toast.success("Staff updated successfully");
       setEditingStaff(null);
       fetchStaff();
@@ -108,7 +108,7 @@ export default function StaffDirectory() {
             placeholder="Search by name, ID, or department..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary outline-none"
+            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-base md:text-sm focus:ring-primary focus:border-primary outline-none"
           />
         </div>
       </div>
@@ -217,7 +217,7 @@ export default function StaffDirectory() {
                     required
                     value={editForm.name}
                     onChange={handleEditChange}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base md:text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                   />
                 </label>
                 <label className="block text-sm">
@@ -228,7 +228,7 @@ export default function StaffDirectory() {
                     required
                     value={editForm.department}
                     onChange={handleEditChange}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base md:text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                   />
                 </label>
                 <label className="block text-sm">
@@ -238,7 +238,7 @@ export default function StaffDirectory() {
                     required
                     value={editForm.shift}
                     onChange={handleEditChange}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base md:text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                   >
                     <option value="">Select shift</option>
                     <option value="Morning">Morning</option>
@@ -254,7 +254,7 @@ export default function StaffDirectory() {
                     required
                     value={editForm.mobile}
                     onChange={handleEditChange}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base md:text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                   />
                 </label>
                 <label className="block text-sm">
@@ -264,7 +264,7 @@ export default function StaffDirectory() {
                     required
                     value={editForm.gender}
                     onChange={handleEditChange}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base md:text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                   >
                     <option value="">Select gender</option>
                     <option value="Male">Male</option>
@@ -280,7 +280,7 @@ export default function StaffDirectory() {
                     required
                     value={editForm.joining_date}
                     onChange={handleEditChange}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base md:text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                   />
                 </label>
               </div>

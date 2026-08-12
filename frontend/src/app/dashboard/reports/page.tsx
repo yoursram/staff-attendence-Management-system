@@ -99,7 +99,7 @@ export default function Reports() {
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary outline-none"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-base md:text-sm focus:ring-primary focus:border-primary outline-none"
               />
             </div>
             <div className="relative flex-1 sm:w-64">
@@ -111,7 +111,7 @@ export default function Reports() {
                 placeholder="Search staff..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary outline-none"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-base md:text-sm focus:ring-primary focus:border-primary outline-none"
               />
             </div>
             <button

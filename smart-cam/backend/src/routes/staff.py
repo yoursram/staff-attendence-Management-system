@@ -73,7 +73,7 @@ async def register_staff(
             os.remove(file_path)
         raise HTTPException(status_code=500, detail=f"Error registering staff: {str(e)}")
 
-@router.get("/")
+@router.get("")
 def get_all_staff(db: Session = Depends(get_db)):
     staff_list = db.query(CleaningStaff).all()
     result = []

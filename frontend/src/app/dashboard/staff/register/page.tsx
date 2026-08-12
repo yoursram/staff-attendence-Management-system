@@ -136,27 +136,27 @@ export default function RegisterStaff() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Staff ID</label>
-              <input type="text" name="staff_id" required value={formData.staff_id} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none" placeholder="CLN001" />
+              <input type="text" name="staff_id" required value={formData.staff_id} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base md:text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none" placeholder="CLN001" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-              <input type="text" name="name" required value={formData.name} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none" placeholder="John Doe" />
+              <input type="text" name="name" required value={formData.name} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base md:text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none" placeholder="John Doe" />
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Department/Area</label>
-            <input type="text" name="department" required value={formData.department} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none" placeholder="Main Building - 1st Floor" />
+            <input type="text" name="department" required value={formData.department} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base md:text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none" placeholder="Main Building - 1st Floor" />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Mobile</label>
-              <input type="tel" name="mobile" required value={formData.mobile} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none" placeholder="+1 234 567 890" />
+              <input type="tel" name="mobile" required value={formData.mobile} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base md:text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none" placeholder="+1 234 567 890" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Shift</label>
-              <select name="shift" value={formData.shift} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none">
+              <select name="shift" value={formData.shift} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base md:text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none">
                 <option>Morning</option>
                 <option>Evening</option>
                 <option>Night</option>
@@ -167,7 +167,7 @@ export default function RegisterStaff() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
-              <select name="gender" value={formData.gender} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none">
+              <select name="gender" value={formData.gender} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base md:text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none">
                 <option>Male</option>
                 <option>Female</option>
                 <option>Other</option>
@@ -175,7 +175,7 @@ export default function RegisterStaff() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Joining Date</label>
-              <input type="date" name="joining_date" required value={formData.joining_date} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+              <input type="date" name="joining_date" required value={formData.joining_date} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base md:text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
             </div>
           </div>
 

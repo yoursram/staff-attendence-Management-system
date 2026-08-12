@@ -67,7 +67,7 @@ export default function Login() {
                   required
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-3 border focus:ring-primary focus:border-primary transition-colors"
+                  className="block w-full pl-10 text-base sm:text-sm border-gray-300 rounded-md py-3 border focus:ring-primary focus:border-primary transition-colors"
                   placeholder="admin"
                 />
               </div>
@@ -86,7 +86,7 @@ export default function Login() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-3 border focus:ring-primary focus:border-primary transition-colors"
+                  className="block w-full pl-10 text-base sm:text-sm border-gray-300 rounded-md py-3 border focus:ring-primary focus:border-primary transition-colors"
                   placeholder="••••••••"
                 />
               </div>
