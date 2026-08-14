@@ -44,18 +44,57 @@ async def scan_attendance(
                 "staff_id": staff_id,
                 "name": recognition.get("name", "Unknown"),
                 "confidence": float(recognition.get("confidence", 0.0)),
+                "bbox": face.get("bbox")
             })
 
         if not recognized_people:
-            return {"success": False, "message": "Unknown Person"}
+            return {"success": False, "message": "Unknown Person. No matching staff record found."}
+
+        today = datetime.now().date()
+        current_time = datetime.now().time()
+        already_marked_people = []
+        new_people = []
+
+        for person in recognized_people:
+            existing = db.query(Attendance).filter(
+                Attendance.staff_id == person["staff_id"],
+                Attendance.attendance_date == today
+            ).first()
+
+            if existing:
+                person["is_already_marked"] = True
+                person["marked_time"] = existing.attendance_time.strftime("%I:%M %p")
+                already_marked_people.append({
+                    "staff_id": person["staff_id"],
+                    "name": person["name"],
+                    "status": existing.status,
+                    "time": existing.attendance_time.strftime("%I:%M %p"),
+                    "date": existing.attendance_date.strftime("%Y-%m-%d"),
+                    "confidence": person["confidence"]
+                })
+            else:
+                person["is_already_marked"] = False
+                person["marked_time"] = None
+                new_people.append(person)
 
         if not confirm:
+            message = "Recognition complete. Please verify detected people before marking attendance."
+            if len(already_marked_people) > 0 and len(new_people) == 0:
+                message = f"All {len(already_marked_people)} detected person(s) have already marked attendance today."
+            elif len(already_marked_people) > 0:
+                message = f"Detected {len(recognized_people)} person(s): {len(already_marked_people)} already marked today, {len(new_people)} ready for check-in."
+
             return {
                 "success": True,
-                "message": "Recognition complete. Please verify the detected people before marking attendance.",
+                "message": message,
                 "requires_verification": True,
                 "data": {
                     "recognized_people": recognized_people,
+                    "already_marked_people": already_marked_people,
+                    "new_people": new_people,
+                    "total_detected": len(recognized_people),
+                    "already_marked_count": len(already_marked_people),
+                    "new_unmarked_count": len(new_people),
                     "camera_location": camera_location,
                     "scanned_at": datetime.now().strftime("%I:%M %p")
                 }
@@ -68,10 +107,7 @@ async def scan_attendance(
         if not selected_ids:
             selected_ids = [person["staff_id"] for person in recognized_people]
 
-        today = datetime.now().date()
-        current_time = datetime.now().time()
         marked_people = []
-        already_marked_people = []
         attendance_records = []
 
         for person in recognized_people:
@@ -84,11 +120,6 @@ async def scan_attendance(
             ).first()
 
             if existing:
-                already_marked_people.append({
-                    "staff_id": person["staff_id"],
-                    "name": person["name"],
-                    "status": "Already Marked"
-                })
                 continue
 
             attendance_records.append(Attendance(
@@ -113,12 +144,13 @@ async def scan_attendance(
 
         return {
             "success": True,
-            "message": "Attendance marked successfully for the verified people.",
+            "message": f"Attendance saved for {len(marked_people)} staff member(s).",
             "requires_verification": False,
             "data": {
                 "marked_people": marked_people,
                 "already_marked_people": already_marked_people,
-                "total_marked": len(marked_people)
+                "total_marked": len(marked_people),
+                "total_already_marked": len(already_marked_people)
             }
         }
     except Exception as e:
