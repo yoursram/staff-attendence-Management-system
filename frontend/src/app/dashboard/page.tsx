@@ -22,9 +22,27 @@ export default function DashboardOverview() {
           api.get("/attendance/weekly")
         ]);
         
-        setStats(dailyRes.data.stats);
-        setRecentRecords(dailyRes.data.records.slice(0, 5));
-        setWeeklyData(weeklyRes.data.weekly);
+        const records = dailyRes.data?.records || [];
+        const serverStats = dailyRes.data?.stats || { total: 0, present: 0, absent: 0, percentage: 0 };
+
+        // Accurately calculate present and absent count:
+        // Any record with status "Absent" is excluded from present
+        const presentRecords = records.filter(
+          (r: any) => r.status && r.status.toLowerCase() !== "absent"
+        );
+        const presentCount = presentRecords.length;
+        const totalCount = serverStats.total || records.length || 0;
+        const absentCount = Math.max(0, totalCount - presentCount);
+        const percentage = totalCount > 0 ? (presentCount / totalCount) * 100 : 0;
+
+        setStats({
+          total: totalCount,
+          present: presentCount,
+          absent: absentCount,
+          percentage: percentage
+        });
+        setRecentRecords(records.slice(0, 5));
+        setWeeklyData(weeklyRes.data?.weekly || []);
       } catch (error) {
         console.error("Error fetching dashboard data", error);
       } finally {
@@ -108,10 +126,16 @@ export default function DashboardOverview() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {record.time}
+                      {record.time || "-"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        (record.status || "").toLowerCase() === "absent"
+                          ? "bg-red-100 text-red-800"
+                          : (record.status || "").toLowerCase() === "checked out"
+                          ? "bg-amber-100 text-amber-800"
+                          : "bg-green-100 text-green-800"
+                      }`}>
                         {record.status}
                       </span>
                     </td>

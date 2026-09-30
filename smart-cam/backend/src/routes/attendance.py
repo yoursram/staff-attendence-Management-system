@@ -24,6 +24,68 @@ async def scan_attendance(
 
     file_path = await save_upload_file(file)
     try:
+        # If user is confirming verified staff, mark them directly without requiring face re-detection
+        if confirm and confirmed_staff_ids:
+            selected_ids = [s.strip() for s in confirmed_staff_ids.split(",") if s.strip()]
+            today = datetime.now().date()
+            current_time = datetime.now().time()
+            marked_people = []
+            already_marked_people = []
+            attendance_records = []
+
+            for s_id in selected_ids:
+                staff_member = db.query(CleaningStaff).filter(CleaningStaff.staff_id == s_id).first()
+                if not staff_member:
+                    continue
+
+                existing = db.query(Attendance).filter(
+                    Attendance.staff_id == s_id,
+                    Attendance.attendance_date == today
+                ).first()
+
+                if existing:
+                    already_marked_people.append({
+                        "staff_id": s_id,
+                        "name": staff_member.name,
+                        "status": existing.status,
+                        "time": existing.attendance_time.strftime("%I:%M %p") if existing.attendance_time else "Today",
+                        "date": existing.attendance_date.strftime("%Y-%m-%d"),
+                        "confidence": existing.confidence_score or 1.0
+                    })
+                    continue
+
+                attendance_records.append(Attendance(
+                    staff_id=s_id,
+                    attendance_date=today,
+                    attendance_time=current_time,
+                    status="Present",
+                    confidence_score=1.0,
+                    camera_location=camera_location
+                ))
+                marked_people.append({
+                    "staff_id": s_id,
+                    "name": staff_member.name,
+                    "status": "Present",
+                    "time": current_time.strftime("%I:%M %p"),
+                    "date": today.strftime("%Y-%m-%d")
+                })
+
+            if attendance_records:
+                db.add_all(attendance_records)
+                db.commit()
+
+            return {
+                "success": True,
+                "message": f"Attendance saved for {len(marked_people)} staff member(s).",
+                "requires_verification": False,
+                "data": {
+                    "marked_people": marked_people,
+                    "already_marked_people": already_marked_people,
+                    "total_marked": len(marked_people),
+                    "total_already_marked": len(already_marked_people)
+                }
+            }
+
         result = face_service.detect_and_recognize_faces(file_path)
 
         if result["faces_detected"] == 0:
@@ -172,8 +234,8 @@ def get_daily_attendance(date: str = None, db: Session = Depends(get_db)):
     
     total_staff = db.query(CleaningStaff).count()
     
-    # Only count present staff that still exist in the database (staff is not None)
-    present_staff = sum(1 for att, staff in records if staff is not None)
+    # Only count present staff that still exist in the database and are not marked Absent
+    present_staff = sum(1 for att, staff in records if staff is not None and (att.status or "").lower() != "absent")
     absent_staff = max(0, total_staff - present_staff)
     
     data = []
@@ -182,7 +244,7 @@ def get_daily_attendance(date: str = None, db: Session = Depends(get_db)):
             "staff_id": att.staff_id,
             "name": staff.name if staff else "Unknown",
             "department": staff.department if staff else "-",
-            "time": att.attendance_time.strftime("%I:%M %p"),
+            "time": att.attendance_time.strftime("%I:%M %p") if att.attendance_time else None,
             "status": att.status,
             "confidence_score": att.confidence_score
         })
@@ -229,7 +291,7 @@ def get_weekly_stats(db: Session = Depends(get_db)):
             CleaningStaff, Attendance.staff_id == CleaningStaff.staff_id
         ).filter(Attendance.attendance_date == target_date).all()
         
-        present_staff = sum(1 for att, staff in records if staff is not None)
+        present_staff = sum(1 for att, staff in records if staff is not None and (att.status or "").lower() != "absent")
         absent_staff = max(0, total_staff - present_staff)
         
         weekly_data.append({
@@ -343,24 +405,26 @@ def check_in_staff(payload: CheckInPayload, db: Session = Depends(get_db)):
         Attendance.attendance_date == today
     ).first()
 
-    current_time = datetime.now().time()
+    status = payload.status or "Checked In"
+    is_absent = status.lower() == "absent"
+    current_time = None if is_absent else datetime.now().time()
 
     if existing:
-        existing.status = payload.status or "Checked In"
+        existing.status = status
         existing.attendance_time = current_time
     else:
         new_att = Attendance(
             staff_id=payload.staff_id,
             attendance_date=today,
             attendance_time=current_time,
-            status=payload.status or "Checked In",
-            confidence_score=1.0,
+            status=status,
+            confidence_score=0.0 if is_absent else 1.0,
             camera_location="Web Manual"
         )
         db.add(new_att)
 
     db.commit()
-    return {"success": True, "message": f"Checked in {staff.name} successfully."}
+    return {"success": True, "message": f"Marked {staff.name} as {status} successfully."}
 
 @router.post("/check-out")
 def check_out_staff(payload: CheckOutPayload, db: Session = Depends(get_db)):

@@ -29,6 +29,8 @@ export default function ScanAttendance() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("environment");
 
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+
   // State for already marked pop-up modal
   const [alreadyMarkedList, setAlreadyMarkedList] = useState<any[]>([]);
   const [showAlreadyMarkedModal, setShowAlreadyMarkedModal] = useState(false);
@@ -52,6 +54,7 @@ export default function ScanAttendance() {
     const imageSrc = webcamRef.current?.getScreenshot();
     if (!imageSrc) return;
 
+    setCapturedImage(imageSrc);
     setIsSubmitting(true);
     try {
       const file = dataURLtoFile(imageSrc, 'scan.jpg');
@@ -102,28 +105,78 @@ export default function ScanAttendance() {
   }, [webcamRef, setIsScanning]);
 
   const confirmAttendance = useCallback(async () => {
-    const imageSrc = webcamRef.current?.getScreenshot();
-    if (!imageSrc) return;
+    if (selectedIds.length === 0) {
+      toast.warning('Please select at least one staff member to save.');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      const file = dataURLtoFile(imageSrc, 'scan.jpg');
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('camera_location', 'Main Gate');
-      formData.append('confirm', 'true');
-      formData.append('confirmed_staff_ids', selectedIds.join(','));
+      let succeeded = false;
+      let resultData: any = null;
 
-      const response = await api.post('/attendance/scan', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      // 1. First attempt: call /attendance/scan with the saved photo from the scan step
+      const imageToUse = capturedImage || webcamRef.current?.getScreenshot();
+      if (imageToUse) {
+        try {
+          const file = dataURLtoFile(imageToUse, 'scan.jpg');
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('camera_location', 'Main Gate');
+          formData.append('confirm', 'true');
+          formData.append('confirmed_staff_ids', selectedIds.join(','));
 
-      if (response.data.success) {
+          const response = await api.post('/attendance/scan', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+
+          if (response.data?.success && response.data?.data) {
+            succeeded = true;
+            resultData = response.data.data;
+          }
+        } catch (scanErr) {
+          console.warn('Confirm via scan endpoint failed, falling back to direct check-in:', scanErr);
+        }
+      }
+
+      // 2. Reliable direct check-in fallback for all verified staff
+      if (!succeeded) {
+        const checkInPromises = selectedIds.map(async (staffId) => {
+          try {
+            await api.post('/attendance/check-in', {
+              staff_id: staffId,
+              status: 'Present'
+            });
+            const cand = candidates.find((c) => c.staff_id === staffId);
+            return {
+              staff_id: staffId,
+              name: cand?.name || staffId,
+              status: 'Present',
+              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              date: new Date().toISOString().split('T')[0]
+            };
+          } catch (err) {
+            console.error(`Error checking in staff ${staffId}:`, err);
+            return null;
+          }
+        });
+
+        const markedResults = (await Promise.all(checkInPromises)).filter(Boolean);
+        if (markedResults.length > 0) {
+          succeeded = true;
+          resultData = {
+            marked_people: markedResults,
+            total_marked: markedResults.length,
+            already_marked_people: []
+          };
+        }
+      }
+
+      if (succeeded) {
         toast.success('Attendance saved successfully!');
-        setLastResult({ type: 'success', data: response.data.data });
-        
-        // If there were any already-marked people in the confirmed payload, notify
-        const alreadyMarked = response.data.data?.already_marked_people || [];
+        setLastResult({ type: 'success', data: resultData });
+
+        const alreadyMarked = resultData?.already_marked_people || [];
         if (alreadyMarked.length > 0) {
           setAlreadyMarkedList(alreadyMarked);
           setShowAlreadyMarkedModal(true);
@@ -131,16 +184,17 @@ export default function ScanAttendance() {
 
         setCandidates([]);
         setSelectedIds([]);
+        setCapturedImage(null);
       } else {
-        toast.error(response.data.message || 'Could not save attendance.');
+        toast.error('Could not save attendance for selected staff.');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Confirm attendance error', error);
-      toast.error('Unable to confirm attendance.');
+      toast.error(error.response?.data?.detail || 'Unable to confirm attendance.');
     } finally {
       setIsSubmitting(false);
     }
-  }, [selectedIds, webcamRef]);
+  }, [selectedIds, capturedImage, candidates, webcamRef]);
 
   const toggleSelection = (staffId: string) => {
     setSelectedIds((current) =>
@@ -165,6 +219,7 @@ export default function ScanAttendance() {
       setLastResult(null);
       setCandidates([]);
       setSelectedIds([]);
+      setCapturedImage(null);
     }
   };
 

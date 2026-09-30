@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from src.database import get_db
-from src.models import CleaningStaff
+from src.models import CleaningStaff, Attendance
 from src.utils.auth import get_current_admin
 from src.services.face_recognition_service import face_service
 from src.utils.image_utils import validate_image, save_upload_file
@@ -91,6 +91,7 @@ def get_all_staff(db: Session = Depends(get_db)):
     return {"staff": result}
 
 @router.put("/{staff_id}")
+@router.put("/{staff_id}/")
 def update_staff(staff_id: str, payload: StaffUpdatePayload, db: Session = Depends(get_db)):
     staff = db.query(CleaningStaff).filter(CleaningStaff.staff_id == staff_id).first()
     if not staff:
@@ -129,11 +130,22 @@ def update_staff(staff_id: str, payload: StaffUpdatePayload, db: Session = Depen
     }
 
 @router.delete("/{staff_id}")
+@router.delete("/{staff_id}/")
 def delete_staff(staff_id: str, db: Session = Depends(get_db)):
     staff = db.query(CleaningStaff).filter(CleaningStaff.staff_id == staff_id).first()
     if not staff:
         raise HTTPException(status_code=404, detail="Staff not found")
-    
+
+    # Clean up image file on disk if it exists
+    if staff.image_path and os.path.exists(staff.image_path):
+        try:
+            os.remove(staff.image_path)
+        except Exception as e:
+            print(f"Error removing image file {staff.image_path}: {e}")
+
+    # Remove related attendance records to prevent orphan data or FK violation
+    db.query(Attendance).filter(Attendance.staff_id == staff_id).delete()
+
     db.delete(staff)
     db.commit()
     face_service.reload_database()

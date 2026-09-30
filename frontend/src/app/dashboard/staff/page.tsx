@@ -47,11 +47,12 @@ export default function StaffDirectory() {
   const handleDelete = async (staff_id: string) => {
     if (confirm(`Are you sure you want to delete staff member ${staff_id}?`)) {
       try {
-        await api.delete(`/staff/${staff_id}/`);
+        await api.delete(`/staff/${staff_id}`);
         toast.success("Staff deleted successfully");
         fetchStaff();
-      } catch {
-        toast.error("Failed to delete staff");
+      } catch (error: any) {
+        const msg = error.response?.data?.detail || error.message || "Failed to delete staff";
+        toast.error(msg);
       }
     }
   };
@@ -77,12 +78,13 @@ export default function StaffDirectory() {
     if (!editingStaff) return;
 
     try {
-      await api.put(`/staff/${editingStaff.staff_id}/`, editForm);
+      await api.put(`/staff/${editingStaff.staff_id}`, editForm);
       toast.success("Staff updated successfully");
       setEditingStaff(null);
       fetchStaff();
-    } catch {
-      toast.error("Failed to update staff");
+    } catch (error: any) {
+      const msg = error.response?.data?.detail || error.message || "Failed to update staff";
+      toast.error(msg);
     }
   };
 
